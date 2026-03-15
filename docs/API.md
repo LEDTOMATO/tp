@@ -1,101 +1,103 @@
 # MediTrack Internal API Documentation
 
 ## Introduction
-MediTrack is a standalone desktop GUI application engineered to streamline logistics and personnel readiness for 
-military field medics. To ensure the system remains maintainable, scalable, and easy to test, it is built upon a 
-modular architecture.
+MediTrack is a standalone Java desktop point-and-click GUI application engineered to streamline logistics and 
+personnel readiness for military field medics. All user interactions are performed via clickable GUI controls 
+(buttons, dropdowns, modals). To ensure the system remains maintainable, scalable, and easy to test, 
+it is built upon a modular architecture.
 
 The system relies on internal APIs to establish clear contracts between its core components: the **UI**, **Logic**, 
-**Model**, and **Storage**. This document outlines the primary methods that facilitate data flow, command execution, 
-and state management across these module boundaries.
+**Model**, **Storage**, and **Security**. This document outlines the primary methods that facilitate data flow, 
+command execution, and state management across these module boundaries. 
 
 ---
 
 ## 1. Logic API
 
-The Logic component is the main execution engine of the application. It receives the parsed commands and executes them 
-by interacting with the Model and Storage components.
+The Logic component is the main execution engine of the application. It receives user action data from the UI, 
+typically triggered through button clicks, with the required data types passed directly from the interface. 
+The Logic layer validates permissions using the Session for role-based access control, ensuring the user has the 
+correct authorization to perform the requested action. Upon validation, it coordinates interactions with both 
+the Model and Storage components to update the application state and ensure data persistence, triggering a save 
+operation through Storage after each successful operation.
 
-### `Logic.executeCommand(String commandText)`
-* **Description:** Receives the raw command string from the UI, utilizes the Parser to translate it, executes 
-the resulting command, and handles saving the updated state.
+### `Logic.authenticate(String password, Role role)`
+* **Description:** Verifies the entered password against the stored BCrypt hash and, if successful, initializes the session for the selected role.
 * **Parameters / inputs:** 
-  * `commandText` (String): The text inputted by the user in the GUI command box.
-* **Return values:** `CommandResult` - An object containing the feedback message to be displayed to the user and 
-any specific UI instructions.
-* **Example usage:** `CommandResult result = logic.executeCommand("delete 1");`
+  * `password` (String): The plain text password entered in the UI.
+  * `role` (Role): The requested operating role (e.g., `FIELD_MEDIC`, `MEDICAL_OFFICER`).
+* **Return values:** `boolean` - Returns `true` if authentication is successful, `false` otherwise.
+* **Example usage:** `boolean isAuth = logic.authenticate("myPassword123", Role.FIELD_MEDIC);`
+
+### `Logic.addSupply(String name, int quantity, LocalDate expiryDate)`
+* **Description:** Receives validated input from the "Add Supply" UI modal, creates a `Supply` object, updates the Model, and triggers a Storage save.
+* **Parameters / inputs:** 
+  * `name` (String): The name of the supply.
+  * `quantity` (int): The amount of the supply.
+  * `expiryDate` (LocalDate): The expiration date from the UI date picker.
+* **Return values:** `void`
+* **Example usage:** `logic.addSupply("Bandages", 50, LocalDate.of(2026, 12, 1));`
 
 ---
 
-## 2. Parser API
+## 2. Model API
 
-The Parser component is strictly responsible for making sense of user input. It translates raw strings into 
-structured, executable command objects without executing them.
+The Model component manages the in-memory state of the application, handling the Medical Inventory, 
+the Personnel Roster, and the active User Session.
 
-### `Parser.parseCommand(String userInput)`
-* **Description:** Parses the raw string input from the user and translates it into an executable `Command` object.
+### `Model.setSessionRole(Role currentRole)`
+* **Description:** Sets the active role for the current application session, which dictates which UI views and actions are accessible.
 * **Parameters / inputs:** 
-  * `userInput` (String): The raw text entered by the user.
-* **Return values:** `Command` - A specific command object (e.g., `AddSupplyCommand`, `DeletePersonnelCommand`) ready 
-to be executed by the Logic component.
-* **Example usage:** `Command command = parser.parseCommand("add supply panadol 50");`
-
----
-
-## 3. Model API
-
-The Model component manages the in-memory state of the application, handling all Create, Read, Update, and Delete 
-operations for the Medical Inventory and the Personnel Roster.
-
-### `Model.addSupply(Supply supply)`
-* **Description:** Adds a new medical supply item to the active inventory tracker.
-* **Parameters / inputs:** 
-  * `supply` (Supply): A valid `Supply` object containing details like name, quantity, and expiry date.
+  * `currentRole` (Role): The authenticated role.
 * **Return values:** `void`
-* **Example usage:** `model.addSupply(new Supply("Bandages", 100, "2026-12-01"));`
+* **Example usage:** `model.setSessionRole(Role.MEDICAL_OFFICER);`
 
-### `Model.deleteSupply(Index targetIndex)`
-* **Description:** Removes a fully consumed or expired supply item from the inventory based on its displayed index 
-in the UI.
-* **Parameters / inputs:** 
-  * `targetIndex` (Index): The 1-based index of the item as shown in the GUI list.
-* **Return values:** `Supply` - Returns the deleted supply object for logging or undo purposes.
-* **Example usage:** `Supply removedItem = model.deleteSupply(Index.fromOneBased(1));`
-
-### `Model.setPersonnelStatus(Personnel target, Status newStatus)`
-* **Description:** Updates the medical readiness status of a specific soldier without overwriting their entire profile.
-* **Parameters / inputs:** 
-  * `target` (Personnel): The specific personnel object to update.
-  * `newStatus` (Status): The new medical status (e.g., `FIT`, `LIGHT_DUTIES`).
-* **Return values:** `void`
-* **Example usage:** `model.setPersonnelStatus(johnDoe, Status.LIGHT_DUTIES);`
+### `Model.generateResupplyReport()`
+* **Description:** Analyzes the inventory and generates a report flagging items with a quantity below 20 or an expiry within 30 days.
+* **Parameters / inputs:** None.
+* **Return values:** `List<ReportItem>` - A structured list containing the flagged items and the reason they were flagged.
+* **Example usage:** `List<ReportItem> report = model.generateResupplyReport();`
 
 ### `Model.getFilteredPersonnelList()`
-* **Description:** Retrieves the current list of personnel, applying any active filters. This is used by the UI to 
-populate the main table or list view dynamically.
+* **Description:** Retrieves the list of personnel based on the active session's filters (e.g., showing only `FIT` personnel for the Medical Officer).
 * **Parameters / inputs:** None.
-* **Return values:** `ObservableList<Personnel>` - A list that automatically updates the UI when the underlying 
-data changes.
-* **Example usage:** `personnelListView.setItems(model.getFilteredPersonnelList());`
+* **Return values:** `ObservableList<Personnel>` - A list that automatically updates the UI table.
+* **Example usage:** `personnelTable.setItems(model.getFilteredPersonnelList());`
 
 ---
 
-## 4. Storage API
+## 3. Storage API
 
-The Storage component handles reading from and writing to the local hard drive, ensuring data persists between 
-application sessions without relying on an external database.
+The Storage component handles reading from and writing to the local hard drive, ensuring data (including 
+security credentials) persists between application sessions without relying on an external database.
 
 ### `Storage.readMediTrackData()`
-* **Description:** Reads the local JSON file and loads the saved inventory and roster data into the application's 
-memory during startup.
+* **Description:** Reads the local JSON file during startup to load the saved inventory, roster data, and 
+the application's master BCrypt password hash into memory.
 * **Parameters / inputs:** None.
 * **Return values:** `Optional<ReadOnlyMediTrack>` - Returns the parsed data if the file exists and is valid, or 
 an empty Optional if no previous save data is found.
 * **Example usage:** `Optional<ReadOnlyMediTrack> data = storage.readMediTrackData();`
 
 ### `Storage.saveMediTrackData(ReadOnlyMediTrack data)`
-* **Description:** Serializes the current state of the application and saves it to the local JSON file.
+* **Description:** Serializes the current state of the application (inventory, roster, and password hash) 
+and saves it to the local JSON file.
 * **Parameters / inputs:** 
   * `data` (ReadOnlyMediTrack): A read-only snapshot of the current Model data.
 * **Return values:** `void` (Throws `IOException` if the file cannot be written).
 * **Example usage:** `storage.saveMediTrackData(model.getMediTrack());`
+
+---
+
+## 4. Security API
+
+The Security component manages application authentication and password hashing, ensuring that sensitive credentials 
+are not processed directly by general logic classes.
+
+### `SecurityManager.authenticate(String plainTextPassword, String storedHash)`
+* **Description:** Compares the plain text password entered by the user at launch against the BCrypt hash stored in the local data file.
+* **Parameters / inputs:** 
+  * `plainTextPassword` (String): The password entered in the UI.
+  * `storedHash` (String): The BCrypt hash retrieved from Storage.
+* **Return values:** `boolean` - Returns `true` if the password matches the hash, `false` otherwise.
+* **Example usage:** `boolean isAuth = securityManager.authenticate(inputPassword, savedHash);`
