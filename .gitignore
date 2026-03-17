@@ -30,3 +30,7 @@ out/
 
 # Local Database
 data.json
+
+# IntelliJ IDEA settings
+.idea/
+*.iml
