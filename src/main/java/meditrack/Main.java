@@ -5,10 +5,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import meditrack.model.MediTrack;
+import meditrack.model.ReadOnlyMediTrack;
 import meditrack.storage.StorageManager;
 import meditrack.ui.FirstLaunchScreen;
 import meditrack.ui.LoginScreen;
-
+import meditrack.ui.MainAppScreen;
+import java.util.Optional;
 /**
  * The main entry point for the MediTrack JavaFX application.
  * Manages the primary stage and controls the flow between setup, login, and the main app.
@@ -17,6 +20,9 @@ public class Main extends Application {
 
     private Stage primaryStage;
     private final StorageManager storageManager = new StorageManager();
+
+    // Loaded once from disk; shared across the lifetime of the session
+    private MediTrack mediTrack;
 
     /**
      * The main entry point for all JavaFX applications.
@@ -27,8 +33,14 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         primaryStage.setTitle("MediTrack");
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(600);
+        primaryStage.setWidth(900);
+        primaryStage.setHeight(620);
+
+        // Load existing data (if any) at startup
+        Optional<ReadOnlyMediTrack> loaded = storageManager.readMediTrackData();
+        mediTrack = loaded.isPresent()
+                ? (MediTrack) loaded.get()
+                : new MediTrack();
 
         if (storageManager.isFirstLaunch()) {
             showFirstLaunchScreen();
@@ -57,13 +69,11 @@ public class Main extends Application {
 
     /**
      * Displays the Main Application screen after a successful login.
-     * Acts as a placeholder until the full UI is built by the team.
+     * with the full {@link MainAppScreen} (sidebar + personnel screens).
      */
     private void showMainAppScreen() {
-        // Placeholder for the main application view that your teammates will help build
-        StackPane mainAppRoot = new StackPane(new Label("Welcome to MediTrack! Role: " +
-                meditrack.model.Session.getInstance().getRole()));
-        primaryStage.setScene(new Scene(mainAppRoot));
+        MainAppScreen mainApp = new MainAppScreen(mediTrack, storageManager, this::showLoginScreen);
+        primaryStage.setScene(new Scene(mainApp, 900, 620));
     }
 
     /**
