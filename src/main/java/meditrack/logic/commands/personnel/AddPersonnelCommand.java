@@ -5,6 +5,7 @@ import meditrack.logic.commands.CommandResult;
 import meditrack.logic.commands.exceptions.CommandException;
 import meditrack.model.Model;
 import meditrack.model.ModelManager;
+import meditrack.model.Role;
 import meditrack.model.Status;
 
 /**
@@ -44,6 +45,11 @@ public class AddPersonnelCommand extends Command {
         ModelManager manager = (ModelManager) model;
         manager.addPersonnel(name, status);
         return new CommandResult(String.format(MESSAGE_SUCCESS, name, status));
+    }
+
+    @Override
+    public Role getRequiredRole() {
+        return Role.MEDICAL_OFFICER;
     }
 
     // Getters for testing

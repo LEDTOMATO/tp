@@ -5,6 +5,7 @@ import java.util.List;
 import javafx.collections.ObservableList;
 
 import meditrack.commons.core.Index;
+import meditrack.logic.commands.exceptions.CommandException;
 
 /**
  * API of the Model component.
@@ -20,8 +21,6 @@ public interface Model {
      * Sets the active role in the Session after a successful login.
      */
     void setRole(Role role);
-
-    // ========== Supply methods (Person B) ==========
 
     /**
      * Adds a new supply to the inventory.
@@ -59,5 +58,38 @@ public interface Model {
      */
     ReadOnlyMediTrack getMediTrack();
 
-    // ========== Personnel methods (Person C will add here) ==========
+    /**
+     * Adds a new personnel member to the roster.
+     */
+    void addPersonnel(String name, Status status) throws CommandException;
+
+    /**
+     * Removes a personnel member by 1-based index.
+     */
+    Personnel deletePersonnel(int oneBasedIndex) throws CommandException;
+
+    /**
+     * Updates the status of a personnel member by 1-based index.
+     */
+    void setPersonnelStatus(int oneBasedIndex, Status newStatus) throws CommandException;
+
+    /**
+     * Returns a snapshot list of personnel filtered by status (null for all).
+     */
+    List<Personnel> getFilteredPersonnelList(Status statusFilter);
+
+    /**
+     * Returns the live observable personnel list for UI binding.
+     */
+    ObservableList<Personnel> getPersonnelList();
+
+    /**
+     * Generates a randomised duty roster from FIT personnel.
+     */
+    List<Personnel> generateRoster() throws CommandException;
+
+    /**
+     * Returns the total number of personnel in the roster.
+     */
+    int getPersonnelCount();
 }

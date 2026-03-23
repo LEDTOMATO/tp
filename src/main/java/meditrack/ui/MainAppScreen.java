@@ -1,48 +1,53 @@
 package meditrack.ui;
 
 import javafx.scene.layout.*;
+import meditrack.logic.Logic;
+import meditrack.logic.LogicManager;
 import meditrack.model.MediTrack;
 import meditrack.model.ModelManager;
+import meditrack.model.Role;
 import meditrack.model.Session;
 import meditrack.storage.StorageManager;
 import meditrack.ui.screen.DutyRosterScreen;
+import meditrack.ui.screen.ExpiringSoonScreen;
 import meditrack.ui.screen.FitPersonnelScreen;
+import meditrack.ui.screen.InventoryScreen;
 import meditrack.ui.screen.PersonnelScreen;
+import meditrack.ui.screen.ResupplyReportScreen;
+import meditrack.ui.screen.SupplyLevelsScreen;
 import meditrack.ui.sidebar.Sidebar;
 import meditrack.ui.sidebar.Sidebar.Screen;
 
 /**
  * Root application layout wiring the {@link Sidebar} and the content area together.
  *
- * <p>Drop this into {@code Main.showMainAppScreen()} by replacing the placeholder:
- * <pre>
- *     private void showMainAppScreen() {
- *     MainAppScreen mainApp = new MainAppScreen(mediTrack, storageManager, this::showLoginScreen);
- *         primaryStage.setScene(new Scene(mainApp, 900, 620));
- *     }
- * </pre>
- *
- * <p>Role-based home screen: both roles land on the Personnel screen.
- * {@link PersonnelScreen} reads {@link Session} internally to decide editability.
+ * <p>Role-based home screen:
+ * <ul>
+ *   <li>FIELD_MEDIC — Inventory</li>
+ *   <li>MEDICAL_OFFICER — Personnel</li>
+ *   <li>LOGISTICS_OFFICER — Supply Levels</li>
+ * </ul>
  */
 public class MainAppScreen extends HBox {
 
     private final ModelManager model;
     private final StorageManager storage;
+    private final Logic logic;
     private final StackPane contentArea = new StackPane();
 
-    // Lazily created — built once, refreshed on each revisit
+    // Lazily created screens
     private PersonnelScreen personnelScreen;
     private FitPersonnelScreen fitPersonnelScreen;
     private DutyRosterScreen dutyRosterScreen;
+    private InventoryScreen inventoryScreen;
+    private ExpiringSoonScreen expiringSoonScreen;
+    private SupplyLevelsScreen supplyLevelsScreen;
+    private ResupplyReportScreen resupplyReportScreen;
 
-    /**
-     * @param mediTrack     the shared data store (pass the one loaded from storage)
-     * @param logoutCallback called when logout is requested; typically navigates to LoginScreen
-     */
     public MainAppScreen(MediTrack mediTrack, StorageManager storage, Runnable logoutCallback) {
         this.model = new ModelManager(mediTrack);
         this.storage = storage;
+        this.logic = new LogicManager(model, storage);
         setFillHeight(true);
 
         Sidebar sidebar = new Sidebar(this::showScreen, () -> {
@@ -54,7 +59,16 @@ public class MainAppScreen extends HBox {
         contentArea.setStyle("-fx-background-color: #f0f2f5; -fx-padding: 16;");
 
         getChildren().addAll(sidebar, contentArea);
-        showScreen(Screen.PERSONNEL);
+
+        // Navigate to the default home screen for this role
+        Role role = Session.getInstance().getRole();
+        if (role == Role.FIELD_MEDIC) {
+            showScreen(Screen.INVENTORY);
+        } else if (role == Role.LOGISTICS_OFFICER) {
+            showScreen(Screen.SUPPLY_LEVELS);
+        } else {
+            showScreen(Screen.PERSONNEL);
+        }
     }
 
     /**
@@ -83,6 +97,30 @@ public class MainAppScreen extends HBox {
                     dutyRosterScreen = new DutyRosterScreen(model);
                 }
                 contentArea.getChildren().add(dutyRosterScreen);
+                break;
+            case INVENTORY:
+                if (inventoryScreen == null) {
+                    inventoryScreen = new InventoryScreen(model, logic);
+                }
+                contentArea.getChildren().add(inventoryScreen);
+                break;
+            case EXPIRING_SOON:
+                if (expiringSoonScreen == null) {
+                    expiringSoonScreen = new ExpiringSoonScreen(model);
+                }
+                contentArea.getChildren().add(expiringSoonScreen);
+                break;
+            case SUPPLY_LEVELS:
+                if (supplyLevelsScreen == null) {
+                    supplyLevelsScreen = new SupplyLevelsScreen(model);
+                }
+                contentArea.getChildren().add(supplyLevelsScreen);
+                break;
+            case RESUPPLY_REPORT:
+                if (resupplyReportScreen == null) {
+                    resupplyReportScreen = new ResupplyReportScreen(model, logic);
+                }
+                contentArea.getChildren().add(resupplyReportScreen);
                 break;
         }
     }

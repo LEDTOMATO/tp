@@ -14,15 +14,12 @@ import java.util.function.Consumer;
 /**
  * Sidebar navigation component.
  *
- * <p>Navigation items are the same for all roles, but labels are adjusted:
+ * <p>Navigation items are role-based:
  * <ul>
- *   <li><b>MEDICAL_OFFICER</b> — "Personnel" (full edit access)</li>
- *   <li><b>FIELD_MEDIC / LOGISTICS_OFFICER</b> — "Personnel (Read-Only)"</li>
+ *   <li><b>FIELD_MEDIC</b> — Inventory, Expiring Soon, Personnel (Read-Only)</li>
+ *   <li><b>MEDICAL_OFFICER</b> — Personnel, FIT Personnel, Duty Roster</li>
+ *   <li><b>LOGISTICS_OFFICER</b> — Supply Levels, Resupply Report</li>
  * </ul>
- * All roles can view FIT Personnel and generate the Duty Roster.
- *
- * <p>The {@code navigationHandler} callback receives a {@link Screen} enum value
- * on each nav click. The {@code logoutHandler} is called on logout.
  */
 public class Sidebar extends VBox {
 
@@ -30,7 +27,11 @@ public class Sidebar extends VBox {
     public enum Screen {
         PERSONNEL,
         FIT_PERSONNEL,
-        DUTY_ROSTER
+        DUTY_ROSTER,
+        INVENTORY,
+        EXPIRING_SOON,
+        SUPPLY_LEVELS,
+        RESUPPLY_REPORT
     }
 
     private final Consumer<Screen> navigationHandler;
@@ -50,12 +51,10 @@ public class Sidebar extends VBox {
         setPadding(new Insets(16, 8, 16, 8));
         setStyle("-fx-background-color: #1c2b3a;");
 
-        // Brand label
         Label brand = new Label("MediTrack");
         brand.setStyle("-fx-text-fill: white; -fx-font-size: 17px; "
                 + "-fx-font-weight: bold; -fx-padding: 0 0 10 8;");
 
-        // Role badge — maps team's Role enum to display text
         Role role = Session.getInstance().getRole();
         String roleText = switch (role) {
             case MEDICAL_OFFICER  -> "Medical Officer";
@@ -67,18 +66,29 @@ public class Sidebar extends VBox {
         roleBadge.setStyle("-fx-background-color: #2e4057; -fx-text-fill: #a0b8cc; "
                 + "-fx-font-size: 11px; -fx-padding: 4 8 4 8; -fx-background-radius: 4;");
 
-        // Nav buttons
-        String personnelLabel = (role == Role.MEDICAL_OFFICER)
-                ? "Personnel" : "Personnel (Read-Only)";
-        Button personnelBtn  = navButton(personnelLabel,    Screen.PERSONNEL);
-        Button fitBtn        = navButton("FIT Personnel",   Screen.FIT_PERSONNEL);
-        Button rosterBtn     = navButton("Duty Roster",     Screen.DUTY_ROSTER);
+        getChildren().addAll(brand, roleBadge, new Separator());
 
-        // Spacer pushes logout to bottom
+        Button firstBtn = null;
+
+        if (role == Role.FIELD_MEDIC) {
+            firstBtn = navButton("Inventory", Screen.INVENTORY);
+            getChildren().add(firstBtn);
+            getChildren().add(navButton("Expiring Soon", Screen.EXPIRING_SOON));
+            getChildren().add(navButton("Personnel (Read-Only)", Screen.PERSONNEL));
+        } else if (role == Role.MEDICAL_OFFICER) {
+            firstBtn = navButton("Personnel", Screen.PERSONNEL);
+            getChildren().add(firstBtn);
+            getChildren().add(navButton("FIT Personnel", Screen.FIT_PERSONNEL));
+            getChildren().add(navButton("Duty Roster", Screen.DUTY_ROSTER));
+        } else if (role == Role.LOGISTICS_OFFICER) {
+            firstBtn = navButton("Supply Levels", Screen.SUPPLY_LEVELS);
+            getChildren().add(firstBtn);
+            getChildren().add(navButton("Resupply Report", Screen.RESUPPLY_REPORT));
+        }
+
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        // Logout
         Button logoutBtn = new Button("Logout");
         logoutBtn.setMaxWidth(Double.MAX_VALUE);
         logoutBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #e07070; "
@@ -86,12 +96,11 @@ public class Sidebar extends VBox {
                 + "-fx-background-radius: 6; -fx-alignment: CENTER_LEFT;");
         logoutBtn.setOnAction(e -> logoutHandler.run());
 
-        getChildren().addAll(
-                brand, roleBadge, new Separator(),
-                personnelBtn, fitBtn, rosterBtn,
-                spacer, new Separator(), logoutBtn);
+        getChildren().addAll(spacer, new Separator(), logoutBtn);
 
-        activateButton(personnelBtn); // default active
+        if (firstBtn != null) {
+            activateButton(firstBtn);
+        }
     }
 
     private Button navButton(String label, Screen target) {

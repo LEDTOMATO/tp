@@ -6,6 +6,7 @@ import meditrack.logic.commands.exceptions.CommandException;
 import meditrack.model.Model;
 import meditrack.model.ModelManager;
 import meditrack.model.Personnel;
+import meditrack.model.Role;
 
 /**
  * Removes a personnel member from the MediTrack roster by 1-based index.
@@ -40,6 +41,11 @@ public class RemovePersonnelCommand extends Command {
         ModelManager manager = (ModelManager) model;
         Personnel removed = manager.deletePersonnel(oneBasedIndex);
         return new CommandResult(String.format(MESSAGE_SUCCESS, removed.getName()));
+    }
+
+    @Override
+    public Role getRequiredRole() {
+        return Role.MEDICAL_OFFICER;
     }
 
     public int getOneBasedIndex() {

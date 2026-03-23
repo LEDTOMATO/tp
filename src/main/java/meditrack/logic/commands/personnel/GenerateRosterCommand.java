@@ -10,6 +10,7 @@ import meditrack.logic.commands.exceptions.CommandException;
 import meditrack.model.Model;
 import meditrack.model.ModelManager;
 import meditrack.model.Personnel;
+import meditrack.model.Role;
 
 /**
  * Generates a randomised duty roster from all currently FIT personnel.
@@ -46,6 +47,11 @@ public class GenerateRosterCommand extends Command {
                 .collect(Collectors.joining("\n"));
 
         return new CommandResult(header + "\n" + numberedList);
+    }
+
+    @Override
+    public Role getRequiredRole() {
+        return Role.MEDICAL_OFFICER;
     }
 
     /**

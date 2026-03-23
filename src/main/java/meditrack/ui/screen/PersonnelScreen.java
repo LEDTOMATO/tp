@@ -48,10 +48,6 @@ public class PersonnelScreen extends VBox {
         refresh();
     }
 
-    // -------------------------------------------------------------------------
-    // UI construction
-    // -------------------------------------------------------------------------
-
     private void buildUi() {
         setSpacing(12);
         setPadding(new Insets(20));
@@ -74,7 +70,6 @@ public class PersonnelScreen extends VBox {
         // Table
         buildTable();
 
-        // Footer — Remove button only for MEDICAL_OFFICER
         HBox footer = new HBox(8);
         footer.setAlignment(Pos.CENTER_RIGHT);
         if (!readOnly) {
@@ -93,7 +88,6 @@ public class PersonnelScreen extends VBox {
 
     @SuppressWarnings("unchecked")
     private void buildTable() {
-        // # column
         TableColumn<Personnel, String> indexCol = new TableColumn<>("#");
         indexCol.setPrefWidth(45);
         indexCol.setCellValueFactory(cd ->
@@ -150,10 +144,6 @@ public class PersonnelScreen extends VBox {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.setPlaceholder(new Label("No personnel found. Use '+ Add Personnel' to get started."));
     }
-
-    // -------------------------------------------------------------------------
-    // Modal launchers
-    // -------------------------------------------------------------------------
 
     private void openAddModal() {
         AddPersonnelModal modal = new AddPersonnelModal();

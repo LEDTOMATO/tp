@@ -5,6 +5,7 @@ import meditrack.logic.commands.CommandResult;
 import meditrack.logic.commands.exceptions.CommandException;
 import meditrack.model.Model;
 import meditrack.model.ModelManager;
+import meditrack.model.Role;
 import meditrack.model.Status;
 
 /**
@@ -48,6 +49,11 @@ public class UpdateStatusCommand extends Command {
                 .get(oneBasedIndex - 1).getName();
         manager.setPersonnelStatus(oneBasedIndex, newStatus);
         return new CommandResult(String.format(MESSAGE_SUCCESS, name, newStatus));
+    }
+
+    @Override
+    public Role getRequiredRole() {
+        return Role.MEDICAL_OFFICER;
     }
 
     public int getOneBasedIndex() {

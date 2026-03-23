@@ -24,13 +24,8 @@ public class MediTrack implements ReadOnlyMediTrack {
         personnel.add(p);
     }
 
-    // -------------------------------------------------------------------------
-    // Package-private accessor for ModelManager (same package)
-    // -------------------------------------------------------------------------
-
     /**
-     * Returns the live mutable personnel list.
-     * Only accessible within {@code meditrack.model} — used by {@link ModelManager}.
+     * Returns the live mutable personnel list (same package only; used by {@link ModelManager}).
      */
     ObservableList<Personnel> getPersonnelObservable() {
         return personnel;
@@ -45,8 +40,6 @@ public class MediTrack implements ReadOnlyMediTrack {
     public ObservableList<Personnel> getPersonnelList() {
         return FXCollections.unmodifiableObservableList(personnel);
     }
-
-    // ========== Supply list operations (Person B) ==========
 
     /** Checks for duplicate supply name (case-insensitive). */
     public boolean hasSupply(Supply supply) {
@@ -73,5 +66,8 @@ public class MediTrack implements ReadOnlyMediTrack {
         return supplies;
     }
 
-    // ========== Personnel list operations (Person C will add here) ==========
+    /** Appends a supply without duplicate check — used by StorageManager when loading from disk. */
+    public void addSupplyRecord(Supply s) {
+        supplies.add(s);
+    }
 }

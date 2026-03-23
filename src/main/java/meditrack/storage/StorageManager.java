@@ -29,19 +29,13 @@ public class StorageManager implements Storage {
         this.jsonStorage = new JsonMediTrackStorage();
     }
 
-    // -------------------------------------------------------------------------
-    // isFirstLaunch — unchanged from team stub
-    // -------------------------------------------------------------------------
 
     @Override
     public boolean isFirstLaunch() {
         return !jsonStorage.getFilePath().toFile().exists();
     }
 
-    // -------------------------------------------------------------------------
-    // readMediTrackData — fills in team's TODO
-    // -------------------------------------------------------------------------
-
+    
     /**
      * Reads the local JSON file and converts it to a {@link ReadOnlyMediTrack}.
      *
@@ -72,16 +66,18 @@ public class StorageManager implements Storage {
             }
         }
 
-        // Person B will add supply loading here in the same pattern
-        // for (JsonAdaptedSupply adapted : serializable.supplies) { ... }
+        for (JsonAdaptedSupply adapted : serializable.supplies) {
+            try {
+                mediTrack.addSupplyRecord(adapted.toModelType());
+            } catch (CommandException e) {
+                System.err.println("[StorageManager] Skipping corrupt supply record: "
+                        + e.getMessage());
+            }
+        }
 
         return Optional.of(mediTrack);
     }
-
-    // -------------------------------------------------------------------------
-    // saveMediTrackData — fills in team's TODO
-    // -------------------------------------------------------------------------
-
+    
     /**
      * Serialises the current model data to JSON and writes it to disk.
      *
@@ -96,10 +92,9 @@ public class StorageManager implements Storage {
                 .map(JsonAdaptedPersonnel::fromModelType)
                 .toList();
 
-        // Person B will provide adaptedSupplies in the same pattern
         List<JsonAdaptedSupply> adaptedSupplies = data.getSupplyList()
                 .stream()
-                .map(s -> new JsonAdaptedSupply(null, 0, null)) // placeholder until Person B fills in
+                .map(JsonAdaptedSupply::fromModelType)
                 .toList();
 
         // Preserve the existing password hash — read it back from the file
