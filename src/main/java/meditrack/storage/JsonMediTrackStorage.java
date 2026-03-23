@@ -1,17 +1,22 @@
 package meditrack.storage;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * A class to access MediTrack data stored as a JSON file on the hard drive.
  * Handles the low-level File I/O operations using the Jackson library.
  */
 public class JsonMediTrackStorage {
+
     private final Path filePath = Paths.get("data.json");
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     /**
      * Retrieves the file path where the application data is stored.
      *
@@ -20,6 +25,7 @@ public class JsonMediTrackStorage {
     public Path getFilePath() {
         return filePath;
     }
+
     /**
      * Reads the serialized data from the JSON file.
      *
@@ -30,6 +36,7 @@ public class JsonMediTrackStorage {
         if (!file.exists()) {
             return Optional.empty();
         }
+
         try {
             JsonSerializableMediTrack data = objectMapper.readValue(file, JsonSerializableMediTrack.class);
             return Optional.of(data);
@@ -38,6 +45,7 @@ public class JsonMediTrackStorage {
             return Optional.empty();
         }
     }
+
     /**
      * Saves the serialized data to the JSON file.
      *

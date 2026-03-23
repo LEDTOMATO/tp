@@ -1,8 +1,11 @@
 package meditrack.storage;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * An Immutable wrapper class that holds all MediTrack data for Jackson serialization.
  * This class serves as the root JSON object containing the password hash, supplies, and personnel.
@@ -11,6 +14,7 @@ public class JsonSerializableMediTrack {
     public final String passwordHash;
     public final List<JsonAdaptedSupply> supplies = new ArrayList<>();
     public final List<JsonAdaptedPersonnel> personnel = new ArrayList<>();
+
     /**
      * Constructs a {@code JsonSerializableMediTrack} with the given data.
      *

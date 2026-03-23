@@ -24,9 +24,7 @@ import meditrack.model.Status;
  * </pre>
  */
 public class JsonAdaptedPersonnel {
-
     public static final String MISSING_FIELD_MSG = "Personnel's %s field is missing.";
-
     public final String name;
     public final String status;
 
