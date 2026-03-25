@@ -34,3 +34,6 @@ data.json
 # IntelliJ IDEA settings
 .idea/
 *.iml
+
+# Ignore user-generated CSV exports
+exports/

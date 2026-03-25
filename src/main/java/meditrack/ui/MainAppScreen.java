@@ -136,16 +136,19 @@ public class MainAppScreen extends HBox {
     }
 
     /**
-     * Handles the CSV export process and shows a popup alert with the result.
+     * Handles the CSV export process, enforcing role-based access control,
+     * and shows a popup alert with the result.
      */
     private void handleExport() {
         try {
-            java.nio.file.Path savedPath = meditrack.storage.CsvExportUtility.exportData(model.getMediTrack());
+            Role currentRole = Session.getInstance().getRole();
+
+            java.nio.file.Path savedPath = meditrack.storage.CsvExportUtility.exportData(model.getMediTrack(), currentRole);
 
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
             alert.setTitle("Export Successful");
             alert.setHeaderText(null);
-            alert.setContentText("Data successfully exported to:\n" + savedPath.toAbsolutePath());
+            alert.setContentText("Security Clearance: " + currentRole.toString() + "\nData successfully exported to:\n" + savedPath.toAbsolutePath());
             alert.showAndWait();
 
         } catch (java.io.IOException e) {
