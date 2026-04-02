@@ -12,11 +12,6 @@ import meditrack.model.ReadOnlyMediTrack;
 public interface Storage {
 
     /**
-     * Returns true if there is no data file yet (first launch).
-     */
-    boolean isFirstLaunch();
-
-    /**
      * Loads model data from disk, or empty if missing or unreadable.
      */
     Optional<ReadOnlyMediTrack> readMediTrackData();

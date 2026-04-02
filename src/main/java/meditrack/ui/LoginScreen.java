@@ -2,7 +2,6 @@ package meditrack.ui;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.Timeline;
@@ -28,8 +27,6 @@ import javafx.util.Duration;
 import meditrack.model.Role;
 import meditrack.model.Session;
 import meditrack.security.PasswordManager;
-import meditrack.storage.JsonMediTrackStorage;
-import meditrack.storage.JsonSerializableMediTrack;
 
 /**
  * Represents the Login UI screen.
@@ -47,18 +44,22 @@ public class LoginScreen extends BorderPane {
     private static final String TEXT_MUTED = "#45483c";
     private static final String BORDER = "#2a2d24";
 
+    // Pre-hash the demo credentials in memory using BCrypt when the screen loads
+    private static final String MO_HASH = PasswordManager.hashPassword("mo123");
+    private static final String FM_HASH = PasswordManager.hashPassword("fm123");
+    private static final String PC_HASH = PasswordManager.hashPassword("pc123");
+    private static final String LO_HASH = PasswordManager.hashPassword("lo123");
+
     private final Runnable onLoginSuccess;
-    private final JsonMediTrackStorage storageEngine;
 
     /**
      * Constructs the Login screen.
      *
      * @param onLoginSuccess A callback function to execute once authentication is
-     *                       successful.
+     * successful.
      */
     public LoginScreen(Runnable onLoginSuccess) {
         this.onLoginSuccess = onLoginSuccess;
-        this.storageEngine = new JsonMediTrackStorage();
         initializeUI();
     }
 
@@ -100,7 +101,6 @@ public class LoginScreen extends BorderPane {
         gridCanvas.widthProperty().addListener((o, ov, nv) -> drawDotGrid(gridCanvas));
         gridCanvas.heightProperty().addListener((o, ov, nv) -> drawDotGrid(gridCanvas));
 
-        // Decorative nested border frames
         Rectangle outerFrame = new Rectangle();
         outerFrame.setFill(Color.TRANSPARENT);
         outerFrame.setStroke(Color.web(OLIVE, 0.18));
@@ -139,12 +139,10 @@ public class LoginScreen extends BorderPane {
         form.setMaxWidth(340);
         form.setPadding(new Insets(48, 40, 48, 40));
 
-        // Heading
         Label heading = new Label("MEDITRACK LOGIN");
         heading.setStyle("-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"
                 + " -fx-font-family: 'Consolas', 'Courier New', monospace;");
 
-        // Divider with subtitle
         HBox divRow = new HBox(8);
         divRow.setAlignment(Pos.CENTER);
         Region l1 = new Region();
@@ -160,8 +158,7 @@ public class LoginScreen extends BorderPane {
         l2.setStyle("-fx-background-color: " + OLIVE + ";");
         divRow.getChildren().addAll(l1, divText, l2);
 
-        // Password field
-        VBox passwordSection = buildFieldSection("MASTER ACCESS KEY");
+        VBox passwordSection = buildFieldSection("ACCESS KEY");
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("••••••••••••");
         passwordField.setMaxWidth(Double.MAX_VALUE);
@@ -170,7 +167,6 @@ public class LoginScreen extends BorderPane {
                 .addListener((o, ov, focused) -> passwordField.setStyle(focused ? inputFocusStyle() : inputStyle()));
         passwordSection.getChildren().add(passwordField);
 
-        
         final String DD_BG = "#1E201C";
         final String DD_BORDER = "#45483C";
         final String DD_TEXT = "#C8C6C6";
@@ -183,7 +179,6 @@ public class LoginScreen extends BorderPane {
         roleDropdown.setPromptText("Select Role");
         roleDropdown.setMaxWidth(Double.MAX_VALUE);
 
-        // Outer box style olive border when closed
         roleDropdown.setStyle(
                 "-fx-background-color: rgba(0,0,0,0.6);"
                         + "-fx-border-color: " + OLIVE + ";"
@@ -192,7 +187,6 @@ public class LoginScreen extends BorderPane {
                         + "-fx-padding: 0;"
                         + "-fx-font-family: 'Consolas', monospace; -fx-font-size: 13px;");
 
-        // Button cell text shown in the closed box after selection
         roleDropdown.setButtonCell(new javafx.scene.control.ListCell<>() {
             @Override
             protected void updateItem(Role item, boolean empty) {
@@ -209,7 +203,6 @@ public class LoginScreen extends BorderPane {
             }
         });
 
-        // Styles each item in the open popup list
         roleDropdown.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
             @Override
             protected void updateItem(Role item, boolean empty) {
@@ -220,7 +213,6 @@ public class LoginScreen extends BorderPane {
                     return;
                 }
                 setText(item.toString());
-                // Base unselected style
                 String base = "-fx-background-color: " + DD_BG + ";"
                         + "-fx-text-fill: " + DD_TEXT + ";"
                         + "-fx-font-family: 'Consolas', monospace; -fx-font-size: 13px;"
@@ -228,7 +220,6 @@ public class LoginScreen extends BorderPane {
                         + "-fx-padding: 6 12 6 10;";
                 setStyle(base);
 
-                
                 setOnMouseEntered(e -> setStyle(
                         "-fx-background-color: " + DD_BORDER + ";"
                                 + "-fx-text-fill: " + DD_TEXT + ";"
@@ -240,7 +231,6 @@ public class LoginScreen extends BorderPane {
                         setStyle(base);
                 });
 
-                
                 if (isSelected()) {
                     setStyle("-fx-background-color: " + DD_SEL_BG + ";"
                             + "-fx-text-fill: " + DD_SEL_FG + ";"
@@ -251,7 +241,6 @@ public class LoginScreen extends BorderPane {
             }
         });
 
-        // Popup list background
         roleDropdown.skinProperty().addListener((obs, oldSkin, newSkin) -> {
             if (newSkin != null) {
                 javafx.scene.Node popup = roleDropdown.lookup(".list-view");
@@ -320,7 +309,7 @@ public class LoginScreen extends BorderPane {
         left.setAlignment(Pos.CENTER);
         left.getChildren().addAll(
                 makeStatusLabel("● LOCAL DATA SYNC: OK"),
-                makeStatusLabel("● ENCRYPTION: BCRYPT"));
+                makeStatusLabel("● AUTH: RBAC"));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -379,7 +368,7 @@ public class LoginScreen extends BorderPane {
     }
 
     /**
-     * Handles the authentication process when the login button is clicked.
+     * Handles the authentication process using BCrypt-secured Demo Credentials.
      *
      * @param plainTextPassword The password entered by the user.
      * @param selectedRole      The role selected from the dropdown.
@@ -391,15 +380,15 @@ public class LoginScreen extends BorderPane {
             return;
         }
 
-        Optional<JsonSerializableMediTrack> dataOpt = storageEngine.readData();
-        if (dataOpt.isEmpty()) {
-            errorLabel.setText("! DATABASE MISSING. RESTART REQUIRED.");
-            return;
-        }
+        // Use BCrypt to securely check the entered plaintext against the hashes
+        boolean isAuthenticated = switch (selectedRole) {
+            case MEDICAL_OFFICER   -> PasswordManager.checkPassword(plainTextPassword, MO_HASH);
+            case FIELD_MEDIC       -> PasswordManager.checkPassword(plainTextPassword, FM_HASH);
+            case PLATOON_COMMANDER -> PasswordManager.checkPassword(plainTextPassword, PC_HASH);
+            case LOGISTICS_OFFICER -> PasswordManager.checkPassword(plainTextPassword, LO_HASH);
+        };
 
-        String storedHash = dataOpt.get().passwordHash;
-
-        if (PasswordManager.checkPassword(plainTextPassword, storedHash)) {
+        if (isAuthenticated) {
             Session.getInstance().setRole(selectedRole);
             onLoginSuccess.run();
         } else {
