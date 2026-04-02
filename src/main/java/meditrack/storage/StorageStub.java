@@ -11,12 +11,6 @@ import meditrack.model.ReadOnlyMediTrack;
  */
 public class StorageStub implements Storage {
 
-    /** Always true for this stub. */
-    @Override
-    public boolean isFirstLaunch() {
-        return true;
-    }
-
     /** Always returns empty. */
     @Override
     public Optional<ReadOnlyMediTrack> readMediTrackData() {
