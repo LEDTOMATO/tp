@@ -45,7 +45,9 @@ public class JsonMediTrackStorage {
     /**
      * Reads the serialized application data from the JSON file.
      *
-     * @return An Optional containing the data if successful, or empty if the file is missing or unreadable.
+     * @return An Optional containing the data if successful, or empty if the file is missing.
+     *         Returns empty and logs an error to stderr if the file exists but cannot be parsed
+     *         (e.g. corrupted or malformed JSON).
      */
     public Optional<JsonSerializableMediTrack> readData() {
         File file = filePath.toFile();
@@ -57,6 +59,7 @@ public class JsonMediTrackStorage {
             JsonSerializableMediTrack data = objectMapper.readValue(file, JsonSerializableMediTrack.class);
             return Optional.of(data);
         } catch (IOException e) {
+            System.err.println("[JsonMediTrackStorage] Failed to parse data file at " + filePath + ": " + e.getMessage());
             return Optional.empty();
         }
     }

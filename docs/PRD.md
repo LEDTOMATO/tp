@@ -122,10 +122,21 @@ As any authorised user, I want to export my accessible data to a CSV file so tha
 The system shall:
 
 - Detect on startup whether a data file exists.
-- On first launch, prompt the user to set a master password before any other screen is accessible. The password shall be stored immediately as a BCrypt hash — never in plain text.
-- On every subsequent launch, require the user to enter the password and select a role before accessing the application.
+- On every launch, present a login screen where the user selects their role and enters the corresponding role password.
+- Authenticate the user by checking the entered password against the BCrypt hash stored for that role — never comparing plain text directly.
 - Restrict available screens and actions based on the selected role (see Role-Based Access Control below).
 - Destroy the active session on logout or application close, requiring re-authentication on the next launch.
+
+Each role has a fixed credential hardcoded for demonstration purposes:
+
+| Role | Password |
+|---|---|
+| **Medical Officer** | `mo123` |
+| **Field Medic** | `fm123` |
+| **Logistics Officer** | `lo123` |
+| **Platoon Commander** | `pc123` |
+
+These credentials are intended for use in controlled demonstration and testing environments. Passwords are stored as BCrypt hashes — never in plain text.
 
 ---
 
@@ -314,11 +325,22 @@ The system should prevent invalid data entries such as:
 
 ### Security
 
-MediTrack uses a single shared password to protect access to the application, reflecting the reality that field teams typically operate from one shared device.
+MediTrack uses per-role passwords to protect access to the application. Each role has a distinct hardcoded credential, stored as a BCrypt hash, reflecting the reality that field teams typically operate from one shared device with multiple operators cycling through roles.
 
 The system shall:
 
-- Require a password at application launch before any features are accessible. On first launch, prompt the user to set the password. The password shall be stored immediately as a BCrypt hash (cost factor 12) in the local JSON data file — never in plain text.
-- Present a role selection screen upon successful authentication, where the user selects their operating role.
+- Require a role selection and matching password at application launch before any features are accessible.
+- Validate the entered password against the BCrypt hash (cost factor 12) stored for the selected role — never comparing plain text directly.
 - Restrict available screens and actions to those permitted for the selected role.
 - Destroy the active session when the user logs out or the application is closed, requiring re-authentication on the next launch.
+
+### Developer Panel
+
+The system includes a hidden developer panel intended for demonstration and testing purposes only. It is not visible in normal operation.
+
+The system shall:
+
+- Toggle a developer panel when the user presses `Ctrl + Shift + D` from any screen within the main application.
+- Display the panel as a collapsible side panel without disrupting the active screen.
+- Provide a **Fast Forward 3 Days** button inside the panel that advances the application's reference date by three days, allowing testers to simulate supply expiry and status changes without waiting.
+- This panel shall not be accessible from the login screen and shall have no effect on persisted data other than the simulated date offset.

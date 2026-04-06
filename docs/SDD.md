@@ -34,7 +34,7 @@ MediTrack uses a layered architecture split into four layers: UI, Logic, Model, 
 
 ### 2.2 Authentication Layer
 
-There's a lightweight authentication layer that runs before the main UI loads. On first launch, if `data.json` doesn't exist yet, the app prompts the user to create a password. On every subsequent launch, a login screen asks for the password and role before anything else is shown. The active session — role only, no password — is held in memory and wiped when the app closes.
+There is a lightweight authentication layer that runs before the main UI loads. On every launch, a login screen presents a role dropdown and a password field. The user selects their role and enters the corresponding credential. The entered password is checked against the BCrypt hash stored for that role using `PasswordManager.checkPassword()`. On success, the selected role is written into the in-memory `Session` singleton and the main application screen loads. The active session — role only, no password — is held in memory and wiped when the app closes.
 
 ### 2.3 Parser Role in a GUI Context
 
@@ -74,6 +74,10 @@ Built entirely in JavaFX. The UI talks to Logic through a single method: `Logic.
 - Add Supply, Edit Supply, Delete Supply (with confirmation)
 - Add Personnel, Remove Personnel (with confirmation)
 - Add Slot (duty roster), Auto-Generate (duty roster), Clear Day confirmation
+
+**Developer Panel**
+
+A hidden side panel is accessible via `Ctrl + Shift + D` from any screen within the main application. It is invisible during normal operation and intended solely for demonstration and testing. The panel provides a **Fast Forward 3 Days** button that advances the application's reference date, allowing testers to simulate supply expiry and status transitions without waiting. It is not accessible from the login screen.
 
 ### 3.2 Logic Component
 
@@ -189,5 +193,25 @@ Key classes:
 **Rationale:** BCrypt was chosen because it is deliberately slow to compute and makes brute-force attacks much harder. Storing the password in plain text, or using a weaker hash, would be a real problem given that `data.json` is just a local file that anyone with file system access could read.
 
 **Trade-off:** There is a small performance cost on login, but since it only happens once per session, this is not a practical concern.
+
+---
+
+### 5.4 Per-Role Hardcoded Credentials
+
+**Decision:** Each role has a fixed password stored as a BCrypt hash. The login screen asks the user to select a role and enter its credential, replacing the previous single shared master password model.
+
+**Rationale:** Giving each role its own password makes it immediately clear which operational context the user is entering, reduces the chance of accidentally operating under the wrong role, and allows individual credentials to be updated independently if needed.
+
+**Trade-off:** Hardcoded credentials are not suitable for production use. They are intentional here because MediTrack is a demonstration application running on a single shared device in a controlled field environment, where a full user account system would add unnecessary complexity.
+
+---
+
+### 5.5 Hidden Developer Panel
+
+**Decision:** Testing utilities (Fast Forward 3 Days) are placed behind a `Ctrl + Shift + D` keyboard shortcut that toggles a hidden side panel, rather than being exposed as visible UI controls.
+
+**Rationale:** Keeping test controls invisible in normal operation prevents accidental use during a live demonstration and keeps the UI uncluttered. A keyboard shortcut is easy for developers to discover and use, while being effectively invisible to end users who are not told about it.
+
+**Trade-off:** The panel is compiled into the production build rather than being gated behind a build flag. This is an acceptable trade-off for a demonstration-scope project where shipping a separate dev build adds overhead without meaningful benefit.
 
 ---

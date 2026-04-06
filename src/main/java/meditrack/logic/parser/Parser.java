@@ -7,22 +7,30 @@ import java.util.Map;
 import meditrack.logic.parser.exceptions.ParseException;
 import meditrack.model.Model;
 
-/** Checks UI fields before a command is built. */
+/**
+ * Validates raw UI field maps before a command object is constructed.
+ * Throws a {@link ParseException} describing the first violated rule so the UI
+ * can surface a meaningful error message to the user.
+ */
 public class Parser {
 
     private final Model model;
 
     /**
-     * @param model used for list size and duplicate checks during validation
+     * Constructs a Parser with the given model.
+     *
+     * @param model The application model, used for list-size and duplicate checks during validation.
      */
     public Parser(Model model) {
         this.model = model;
     }
 
     /**
-     * Validates fields for commandType.
+     * Validates the provided fields map against the rules for the given command type.
      *
-     * @throws ParseException if any rule fails
+     * @param commandType The type of command being validated.
+     * @param fields      A map of raw field names to their string values from the UI.
+     * @throws ParseException If any required field is missing, blank, or fails a constraint check.
      */
     public void validate(CommandType commandType, Map<String, String> fields) throws ParseException {
         switch (commandType) {
@@ -50,6 +58,13 @@ public class Parser {
         }
     }
 
+    /**
+     * Validates supply-specific fields: name (non-blank), quantity (positive integer),
+     * and expiry date (valid ISO-8601 date that is strictly in the future).
+     *
+     * @param fields The raw field map from the UI.
+     * @throws ParseException If any supply field fails validation.
+     */
     private void validateSupplyFields(Map<String, String> fields) throws ParseException {
         String name = fields.get("name");
         if (name == null || name.trim().isEmpty()) {
@@ -83,6 +98,13 @@ public class Parser {
         }
     }
 
+    /**
+     * Validates that the {@code "index"} field is a positive integer within the current list bounds.
+     *
+     * @param fields   The raw field map from the UI.
+     * @param listSize The number of items currently in the list, used for bounds checking.
+     * @throws ParseException If the index is missing, not a valid integer, non-positive, or out of bounds.
+     */
     private void validateIndexField(Map<String, String> fields, int listSize) throws ParseException {
         String indexStr = fields.get("index");
         if (indexStr == null || indexStr.trim().isEmpty()) {

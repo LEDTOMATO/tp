@@ -396,13 +396,15 @@ String hash = PasswordManager.hashPassword("mySecurePassword");
 ```
 
 ### `PasswordManager.checkPassword(String plainTextPassword, String storedHash)`
-* **Description:** Compares the plain text password entered by the user at launch against the BCrypt hash stored in 
-the local data file. The plain-text password is never stored or logged.
+* **Description:** Compares the plain text password entered by the user at launch against the BCrypt hash stored for
+the selected role. Each role has its own hardcoded BCrypt hash — the login screen passes the hash that corresponds
+to the role the user selected. The plain-text password is never stored or logged.
 * **Parameters:** 
   * `plainTextPassword` (String): The password entered in the UI.
-  * `storedHash` (String): The BCrypt hash retrieved from Storage.
+  * `storedHash` (String): The BCrypt hash for the selected role.
 * **Return values:** `boolean` - Returns `true` if the password matches the hash, `false` otherwise.
 * **Example usage:** 
 ```java
-boolean isAuth = PasswordManager.checkPassword(inputPassword, savedHash);
+// storedHash is looked up by the selected role, e.g. the hash for Role.FIELD_MEDIC
+boolean isAuth = PasswordManager.checkPassword(inputPassword, storedHash);
 ```
