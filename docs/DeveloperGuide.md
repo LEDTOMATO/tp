@@ -461,21 +461,18 @@ The result is a `GenerateResult` record containing:
 ```
 src/test/java/meditrack/
 ├── commons/core/
-│   ├── IndexTest.java
-│   └── IndexExtendedTest.java
+│   └── IndexTest.java
 ├── logic/
 │   ├── LogicManagerTest.java
 │   ├── WorkflowValidationTest.java
 │   ├── commands/
 │   │   ├── CommandResultTest.java
-│   │   ├── CommandResultExtendedTest.java
-│   │   ├── GenerateResupplyReportCommandExtendedTest.java
+│   │   ├── GenerateResupplyReportCommandTest.java
 │   │   ├── SupplyCommandsTest.java
 │   │   ├── exceptions/
 │   │   │   └── CommandExceptionTest.java
 │   │   └── personnel/
 │   │       ├── AddPersonnelCommandTest.java
-│   │       ├── AddPersonnelCommandExtendedTest.java
 │   │       ├── RemovePersonnelCommandTest.java
 │   │       └── UpdateStatusCommandTest.java
 │   └── parser/
@@ -488,31 +485,23 @@ src/test/java/meditrack/
 ├── model/
 │   ├── BloodGroupTest.java
 │   ├── DutySlotTest.java
-│   ├── DutySlotExtendedTest.java
 │   ├── DutyTypeTest.java
 │   ├── MediTrackTest.java
 │   ├── ModelManagerTest.java
-│   ├── ModelManagerExtendedTest.java
 │   ├── PersonnelTest.java
-│   ├── PersonnelExtendedTest.java
 │   ├── RoleTest.java
 │   ├── SessionTest.java
 │   ├── StatusTest.java
-│   ├── SupplyTest.java
-│   └── SupplyExtendedTest.java
+│   └── SupplyTest.java
 ├── security/
 │   └── PasswordManagerTest.java
 └── storage/
     ├── CsvExportUtilityTest.java
     ├── JsonAdaptedDutySlotTest.java
-    ├── JsonAdaptedDutySlotExtendedTest.java
     ├── JsonAdaptedPersonnelTest.java
-    ├── JsonAdaptedPersonnelExtendedTest.java
     ├── JsonAdaptedSupplyTest.java
-    ├── JsonAdaptedSupplyExtendedTest.java
     ├── JsonMediTrackStorageTest.java
-    ├── StorageManagerTest.java
-    └── StorageManagerExtendedTest.java
+    └── StorageManagerTest.java
 ```
 
 ### Test Isolation Techniques
